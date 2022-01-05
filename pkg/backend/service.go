@@ -1,7 +1,7 @@
 package backend
 
 import (
-	common2 "github.com/ebarti/dd-assignment/pkg/backend/logs"
+	"github.com/ebarti/dd-assignment/pkg/backend/logs"
 	"github.com/ebarti/dd-assignment/pkg/backend/metrics"
 	"github.com/ebarti/dd-assignment/pkg/backend/monitors"
 	"github.com/ebarti/dd-assignment/pkg/backend/pipeline"
@@ -29,7 +29,7 @@ func NewService(
 	tmp := make(chan []*metrics.MetricSample)
 	aggregator := metrics.NewMetricAggregator(writer, tmp, interval)
 
-	out := make(chan *common2.ProcessedLog)
+	out := make(chan *logs.ProcessedLog)
 	logPipeline := pipeline.NewLogPipeline(InputChan, out, logProcessor)
 	var logMonitors []*monitors.LogMonitor
 	for _, config := range monitorConfigs {

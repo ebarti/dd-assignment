@@ -1,24 +1,24 @@
 package pipeline
 
 import (
-	common2 "github.com/ebarti/dd-assignment/pkg/backend/logs"
+	"github.com/ebarti/dd-assignment/pkg/backend/logs"
 	"github.com/ebarti/dd-assignment/pkg/backend/monitors"
 	"github.com/ebarti/dd-assignment/pkg/common"
 	"sync"
 )
 
-type LogProcessorFunc func(*common.Message) (*common2.ProcessedLog, error)
+type LogProcessorFunc func(*common.Message) (*logs.ProcessedLog, error)
 
 type LogPipeline struct {
 	inputChan        chan *common.Message
-	Monitors         []chan *common2.ProcessedLog
-	OutputChan       chan *common2.ProcessedLog
+	Monitors         []chan *logs.ProcessedLog
+	OutputChan       chan *logs.ProcessedLog
 	logProcessorFunc LogProcessorFunc
 }
 
 func NewLogPipeline(
 	inputChan chan *common.Message,
-	outputChan chan *common2.ProcessedLog,
+	outputChan chan *logs.ProcessedLog,
 	logProcessorFunc LogProcessorFunc,
 ) *LogPipeline {
 
@@ -64,7 +64,7 @@ func (i *LogPipeline) process(msg *common.Message) {
 	wg := sync.WaitGroup{}
 	wg.Add(len(i.Monitors) + 1)
 	for _, output := range i.Monitors {
-		go func(output chan *common2.ProcessedLog) {
+		go func(output chan *logs.ProcessedLog) {
 			defer wg.Done()
 			output <- log
 		}(output)

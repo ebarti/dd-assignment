@@ -2,7 +2,7 @@ package backend
 
 import (
 	"github.com/ebarti/dd-assignment/pkg/backend/errors"
-	common2 "github.com/ebarti/dd-assignment/pkg/backend/logs"
+	"github.com/ebarti/dd-assignment/pkg/backend/logs"
 	"github.com/ebarti/dd-assignment/pkg/backend/pipeline"
 	"github.com/ebarti/dd-assignment/pkg/common"
 	"strconv"
@@ -15,12 +15,12 @@ const (
 
 var headerLen = len(strings.Split(header, ","))
 
-var CsvLogProcessor pipeline.LogProcessorFunc = func(msg *common.Message) (*common2.ProcessedLog, error) {
+var CsvLogProcessor pipeline.LogProcessorFunc = func(msg *common.Message) (*logs.ProcessedLog, error) {
 	content := string(msg.Content)
 	if content == header {
 		return nil, nil
 	}
-	log := &common2.ProcessedLog{
+	log := &logs.ProcessedLog{
 		Host:       msg.Origin,
 		Message:    content,
 		Attributes: make(map[string]interface{}),
