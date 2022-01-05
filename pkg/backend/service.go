@@ -9,7 +9,6 @@ import (
 )
 
 type Service struct {
-	inputChan        chan *common.Message
 	logPipeline      *pipeline.LogPipeline
 	metricsPipeline  *metrics.MetricsPipeline
 	metricAggregator *metrics.MetricAggregator
@@ -27,7 +26,8 @@ func NewService(
 	aggregator := metrics.NewMetricAggregator(writer, interval)
 	metricsPipeline := metrics.NewMetricsPipeline(customMetrics)
 	logPipeline := pipeline.NewLogPipeline(logProcessor)
-
+	aggregator.From(metricsPipeline.OutputChan)
+	metricsPipeline.From(logPipeline.OutputChan)
 	if len(monitorConfigs) > 0 {
 		var logMonitors []*monitors.LogMonitor
 		for _, config := range monitorConfigs {
@@ -37,7 +37,6 @@ func NewService(
 	}
 
 	return &Service{
-		inputChan:        make(chan *common.Message, 100),
 		logPipeline:      logPipeline,
 		metricsPipeline:  metricsPipeline,
 		metricAggregator: aggregator,
@@ -46,11 +45,5 @@ func NewService(
 }
 
 func (s *Service) From(input chan *common.Message) {
-	s.inputChan = input
-}
-
-func (s *Service) setUp() {
-	s.metricAggregator.From(s.metricsPipeline.OutputChan)
-	s.metricsPipeline.From(s.logPipeline.OutputChan)
-	s.logPipeline.From(s.inputChan)
+	s.logPipeline.From(input)
 }
