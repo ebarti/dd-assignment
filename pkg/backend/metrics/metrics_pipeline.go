@@ -2,12 +2,15 @@ package metrics
 
 import (
 	"github.com/ebarti/dd-assignment/pkg/backend/logs"
+	"sync/atomic"
 )
 
 type MetricsPipeline struct {
 	inputChan     chan *logs.ProcessedLog
 	OutputChan    chan []*MetricSample
 	customMetrics []*CustomMetricPipeline
+	done          chan struct{}
+	isDone        uint32
 }
 
 func NewMetricsPipeline(
@@ -17,6 +20,7 @@ func NewMetricsPipeline(
 		inputChan:     make(chan *logs.ProcessedLog),
 		OutputChan:    make(chan []*MetricSample),
 		customMetrics: customMetrics,
+		done:          make(chan struct{}),
 	}
 }
 
@@ -30,10 +34,14 @@ func (m *MetricsPipeline) Start() error {
 }
 
 func (m *MetricsPipeline) Stop() {
-	close(m.inputChan)
+	if atomic.CompareAndSwapUint32(&m.isDone, 0, 1) {
+		close(m.inputChan)
+		<-m.done
+	}
 }
 
 func (m *MetricsPipeline) run() {
+	defer m.cleanUp()
 	for input := range m.inputChan {
 		var metrics []*MetricSample
 		for _, metric := range m.customMetrics {
@@ -41,7 +49,12 @@ func (m *MetricsPipeline) run() {
 		}
 		m.OutputChan <- metrics
 	}
+}
+
+func (m *MetricsPipeline) cleanUp() {
 	close(m.OutputChan)
+	atomic.StoreUint32(&m.isDone, 1)
+	close(m.done)
 }
 
 type CustomMetricPipeline struct {

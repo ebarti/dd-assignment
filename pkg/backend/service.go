@@ -12,6 +12,7 @@ type Service struct {
 	logPipeline      *pipeline.LogPipeline
 	metricsPipeline  *metrics.MetricsPipeline
 	metricAggregator *metrics.MetricAggregator
+	monitors         []*monitors.LogMonitor
 	writer           io.Writer
 }
 
@@ -27,12 +28,12 @@ func NewService(
 	logPipeline := pipeline.NewLogPipeline(logProcessor)
 	aggregator.From(metricsPipeline.OutputChan)
 	metricsPipeline.From(logPipeline.OutputChan)
+	var m []*monitors.LogMonitor
 	if len(monitorConfigs) > 0 {
-		var logMonitors []*monitors.LogMonitor
 		for _, config := range monitorConfigs {
-			logMonitors = append(logMonitors, monitors.NewLogMonitor(config, writer))
+			m = append(m, monitors.NewLogMonitor(config, writer))
 		}
-		logPipeline.AddMonitors(logMonitors)
+		logPipeline.AddMonitors(m)
 	}
 
 	return &Service{
@@ -40,6 +41,7 @@ func NewService(
 		metricsPipeline:  metricsPipeline,
 		metricAggregator: aggregator,
 		writer:           writer,
+		monitors:         m,
 	}
 }
 
@@ -54,6 +56,11 @@ func (s *Service) Start() error {
 	}
 	if err := s.metricsPipeline.Start(); err != nil {
 		return err
+	}
+	for _, m := range s.monitors {
+		if err := m.Start(); err != nil {
+			return err
+		}
 	}
 	if err := s.logPipeline.Start(); err != nil {
 		return err

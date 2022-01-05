@@ -5,6 +5,7 @@ import (
 	"github.com/ebarti/dd-assignment/pkg/backend/monitors"
 	"github.com/ebarti/dd-assignment/pkg/common"
 	"sync"
+	"sync/atomic"
 )
 
 type LogProcessorFunc func(*common.Message) (*logs.ProcessedLog, error)
@@ -14,6 +15,8 @@ type LogPipeline struct {
 	monitors         []chan *logs.ProcessedLog
 	OutputChan       chan *logs.ProcessedLog
 	logProcessorFunc LogProcessorFunc
+	done             chan struct{}
+	isDone           uint32
 }
 
 func NewLogPipeline(
@@ -24,6 +27,7 @@ func NewLogPipeline(
 		inputChan:        make(chan *common.Message),
 		OutputChan:       make(chan *logs.ProcessedLog),
 		logProcessorFunc: logProcessorFunc,
+		done:             make(chan struct{}),
 	}
 }
 
@@ -47,7 +51,10 @@ func (i *LogPipeline) Start() error {
 }
 
 func (i *LogPipeline) Stop() {
-	close(i.inputChan)
+	if atomic.CompareAndSwapUint32(&i.isDone, 0, 1) {
+		close(i.inputChan)
+		<-i.done
+	}
 }
 
 func (i *LogPipeline) run() {
@@ -62,6 +69,8 @@ func (i *LogPipeline) cleanUp() {
 	for _, output := range i.monitors {
 		close(output)
 	}
+	atomic.StoreUint32(&i.isDone, 1)
+	close(i.done)
 }
 
 func (i *LogPipeline) process(msg *common.Message) {

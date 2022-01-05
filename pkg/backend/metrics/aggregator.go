@@ -42,14 +42,19 @@ func (s *MetricAggregator) Start() error {
 }
 
 func (s *MetricAggregator) Stop() {
-	close(s.InputChan)
 	if atomic.CompareAndSwapUint32(&s.isDone, 0, 1) {
+		close(s.InputChan)
 		<-s.done
 	}
 }
 
+func (s *MetricAggregator) cleanUp() {
+	atomic.StoreUint32(&s.isDone, 1)
+	close(s.done)
+}
+
 func (s *MetricAggregator) run() {
-	defer close(s.done)
+	defer s.cleanUp()
 	for input := range s.InputChan {
 		if len(input) == 0 {
 			continue

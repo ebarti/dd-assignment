@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"fmt"
 	"github.com/ebarti/dd-assignment/pkg/backend/errors"
 	"github.com/ebarti/dd-assignment/pkg/backend/logs"
 	"github.com/ebarti/dd-assignment/pkg/backend/metrics"
@@ -9,6 +10,7 @@ import (
 	"github.com/ebarti/dd-assignment/pkg/common"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func GetCsvLogMonitorConfig(interval, threshold int64) *monitors.LogMonitorConfig {
@@ -21,14 +23,14 @@ func GetCsvLogMonitorConfig(interval, threshold int64) *monitors.LogMonitorConfi
 		AlertTemplateContextFunc: func(m *metrics.ComputedMetric) map[string]string {
 			return map[string]string{
 				"value": strconv.FormatInt(m.Value, 10),
-				"time":  strconv.FormatInt(m.Timestamp, 10),
+				"time":  fmt.Sprintf("%v", time.Unix(m.Timestamp, 0)),
 			}
 		},
 		RecoveryTemplate:  "Recovered from high traffic at time {{time}}\n",
-		RecoveryThreshold: 2,
+		RecoveryThreshold: interval,
 		RecoveryTemplateContextFunc: func(m *metrics.ComputedMetric) map[string]string {
 			return map[string]string{
-				"time": strconv.FormatInt(m.Timestamp, 10),
+				"time": fmt.Sprintf("%v", time.Unix(m.Timestamp, 0)),
 			}
 		},
 	}
