@@ -11,7 +11,7 @@ type LogProcessorFunc func(*common.Message) (*logs.ProcessedLog, error)
 
 type LogPipeline struct {
 	inputChan        chan *common.Message
-	Monitors         []chan *logs.ProcessedLog
+	monitors         []chan *logs.ProcessedLog
 	OutputChan       chan *logs.ProcessedLog
 	logProcessorFunc LogProcessorFunc
 }
@@ -29,8 +29,14 @@ func NewLogPipeline(
 	}
 }
 
-func (i *LogPipeline) AddMonitor(logMonitor *monitors.LogMonitor) {
-	i.Monitors = append(i.Monitors, logMonitor.InputChan)
+func (i *LogPipeline) AddMonitors(logMonitor []*monitors.LogMonitor) {
+	for _, monitor := range logMonitor {
+		i.addMonitoredChannel(monitor.InputChan)
+	}
+}
+
+func (i *LogPipeline) addMonitoredChannel(c chan *logs.ProcessedLog) {
+	i.monitors = append(i.monitors, c)
 }
 
 func (i *LogPipeline) Start() error {
@@ -51,7 +57,7 @@ func (i *LogPipeline) run() {
 
 func (i *LogPipeline) cleanUp() {
 	close(i.OutputChan)
-	for _, output := range i.Monitors {
+	for _, output := range i.monitors {
 		close(output)
 	}
 }
@@ -62,8 +68,8 @@ func (i *LogPipeline) process(msg *common.Message) {
 		return
 	}
 	wg := sync.WaitGroup{}
-	wg.Add(len(i.Monitors) + 1)
-	for _, output := range i.Monitors {
+	wg.Add(len(i.monitors) + 1)
+	for _, output := range i.monitors {
 		go func(output chan *logs.ProcessedLog) {
 			defer wg.Done()
 			output <- log

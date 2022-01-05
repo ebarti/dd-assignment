@@ -36,8 +36,9 @@ func TestLogPipeline(t *testing.T) {
 
 	inputChan := make(chan *common.Message)
 	outputChan := make(chan *logs.ProcessedLog, len(msgs)+1)
-
+	monitorChan := make(chan *logs.ProcessedLog, len(msgs)+1)
 	logPipeline := NewLogPipeline(inputChan, outputChan, csvLogProcessor)
+	logPipeline.addMonitoredChannel(monitorChan)
 	assert.NoError(t, logPipeline.Start())
 	for _, msg := range msgs {
 		inputChan <- msg
@@ -45,7 +46,9 @@ func TestLogPipeline(t *testing.T) {
 	logPipeline.Stop()
 
 	ii := 0
-	for output := range outputChan {
+
+	// helper function to check the output and the monitored output
+	outPutChecker := func(ii int, output *logs.ProcessedLog) {
 		assert.Equal(t, "200", output.Status)
 		assert.Equal(t, lines[ii], output.Message)
 		assert.EqualValues(t, 1549573860, output.Timestamp)
@@ -75,6 +78,12 @@ func TestLogPipeline(t *testing.T) {
 			assert.EqualValues(t, "api", pathAttributes["section"])
 			assert.EqualValues(t, "help", pathAttributes["subsection"])
 		}
+	}
+	for output := range outputChan {
+		// check that both output and monitored output are the same and match the expected output
+		monitored := <-monitorChan
+		outPutChecker(ii, output)
+		outPutChecker(ii, monitored)
 		ii++
 	}
 }
