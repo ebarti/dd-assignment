@@ -42,10 +42,7 @@ func TestWindowCountMetric(t *testing.T) {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
-				// we cannot compare the got and want directly because the order of the groups is not guaranteed
-				assert.Equal(t, tt.want.Value, got.Value)
-				assert.Equal(t, tt.want.Timestamp, got.Timestamp)
-				assert.ElementsMatch(t, tt.want.Groups, got.Groups)
+				assert.True(t, tt.want.Equals(got))
 			}
 		})
 	}

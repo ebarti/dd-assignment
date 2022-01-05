@@ -83,33 +83,19 @@ func (s *CustomMetricPipeline) Compute(log *logs.ProcessedLog) *MetricSample {
 	}
 	sample.Value = value
 	// Enrich log with the required tags if we are grouping by
-	tags := s.GetBasicLogTags(log)
-	for _, g := range s.groupBy {
-		val := log.GetAttribute(g)
-		if val == nil {
-			continue
+	if len(s.groupBy) > 0 {
+		tags := []*Tag{}
+		for _, g := range s.groupBy {
+			val := log.GetAttribute(g)
+			if val == nil {
+				continue
+			}
+			tags = append(tags, &Tag{
+				Name:  g,
+				Value: *val,
+			})
 		}
-		tags = append(tags, &Tag{
-			Name:  g,
-			Value: *val,
-		})
+		sample.Tags = tags
 	}
-	sample.Tags = tags
 	return sample
-}
-
-func (s *CustomMetricPipeline) GetBasicLogTags(log *logs.ProcessedLog) []*Tag {
-	var tags []*Tag
-	tagNames := []string{"host", "service", "status"}
-	for _, t := range tagNames {
-		val := log.GetAttribute(t)
-		if val == nil {
-			continue
-		}
-		tags = append(tags, &Tag{
-			Name:  t,
-			Value: *val,
-		})
-	}
-	return tags
 }
