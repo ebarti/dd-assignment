@@ -9,13 +9,9 @@ import (
 	"strings"
 )
 
-const (
-	header = "\"remotehost\",\"rfc931\",\"authuser\",\"date\",\"request\",\"status\",\"bytes\""
-)
-
-var headerLen = len(strings.Split(header, ","))
-
 var CsvLogProcessor pipeline.LogProcessorFunc = func(msg *common.Message) (*logs.ProcessedLog, error) {
+	header := "\"remotehost\",\"rfc931\",\"authuser\",\"date\",\"request\",\"status\",\"bytes\""
+	headerLen := len(strings.Split(header, ","))
 	content := string(msg.Content)
 	if content == header {
 		return nil, nil
@@ -47,7 +43,7 @@ var CsvLogProcessor pipeline.LogProcessorFunc = func(msg *common.Message) (*logs
 	log.Attributes["rfc931"] = splitContent[1]
 	log.Attributes["authuser"] = splitContent[2]
 	log.Attributes["request"] = request
-	log.Attributes["status"] = splitContent[5]
+	log.Status = splitContent[5]
 	log.Attributes["bytes"] = splitContent[6]
 
 	// parse request. Example: GET /api/user HTTP/1.0
@@ -73,5 +69,6 @@ var CsvLogProcessor pipeline.LogProcessorFunc = func(msg *common.Message) (*logs
 	}
 	httpAttributes["path"] = pathAttributes
 	log.Attributes["http"] = httpAttributes
+	log.Message = string(msg.Content)
 	return log, nil
 }
