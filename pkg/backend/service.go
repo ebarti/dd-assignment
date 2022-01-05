@@ -5,7 +5,7 @@ import (
 	"github.com/ebarti/dd-assignment/pkg/backend/monitors"
 	"github.com/ebarti/dd-assignment/pkg/backend/pipeline"
 	"github.com/ebarti/dd-assignment/pkg/common"
-	"io"
+	"log"
 )
 
 type Service struct {
@@ -13,7 +13,7 @@ type Service struct {
 	metricsPipeline  *metrics.MetricsPipeline
 	metricAggregator *metrics.MetricAggregator
 	monitors         []*monitors.LogMonitor
-	writer           io.Writer
+	logger           *log.Logger
 }
 
 func NewService(
@@ -21,9 +21,9 @@ func NewService(
 	logProcessor pipeline.LogProcessorFunc,
 	customMetrics []*metrics.CustomMetricPipeline,
 	monitorConfigs []*monitors.LogMonitorConfig,
-	writer io.Writer,
+	logger *log.Logger,
 ) *Service {
-	aggregator := metrics.NewMetricAggregator(writer, interval)
+	aggregator := metrics.NewMetricAggregator(logger, interval)
 	metricsPipeline := metrics.NewMetricsPipeline(customMetrics)
 	logPipeline := pipeline.NewLogPipeline(logProcessor)
 	aggregator.From(metricsPipeline.OutputChan)
@@ -31,7 +31,7 @@ func NewService(
 	var m []*monitors.LogMonitor
 	if len(monitorConfigs) > 0 {
 		for _, config := range monitorConfigs {
-			m = append(m, monitors.NewLogMonitor(config, writer))
+			m = append(m, monitors.NewLogMonitor(config, logger))
 		}
 		logPipeline.AddMonitors(m)
 	}
@@ -40,7 +40,7 @@ func NewService(
 		logPipeline:      logPipeline,
 		metricsPipeline:  metricsPipeline,
 		metricAggregator: aggregator,
-		writer:           writer,
+		logger:           logger,
 		monitors:         m,
 	}
 }

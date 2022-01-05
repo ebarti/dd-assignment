@@ -9,6 +9,7 @@ import (
 	"github.com/ebarti/dd-assignment/pkg/common"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/goleak"
+	"log"
 	"testing"
 	"time"
 )
@@ -35,8 +36,8 @@ func TestService(t *testing.T) {
 		"Recovered from high traffic at time 109",
 	}
 	_ = expectedOutputLines
-
 	buf := bytes.Buffer{}
+	logger := log.New(&buf, "", 0)
 
 	var msgs []*common.Message
 	for _, line := range lines {
@@ -50,13 +51,14 @@ func TestService(t *testing.T) {
 	interval := int64(2)
 	threshold := int64(2)
 
-	service := NewService(interval, GetCsvLogProcessingFunc(), []*metrics.CustomMetricPipeline{GetCsvCustomMetricsPipelines(interval)}, []*monitors.LogMonitorConfig{GetCsvLogMonitorConfig(interval, threshold)}, &buf)
+	service := NewService(interval, GetCsvLogProcessingFunc(), []*metrics.CustomMetricPipeline{GetCsvCustomMetricsPipelines(interval)}, []*monitors.LogMonitorConfig{GetCsvLogMonitorConfig(interval, threshold)}, logger)
 	service.From(inputChan)
 	assert.NoError(t, service.Start())
 	for _, msg := range msgs {
 		inputChan <- msg
 	}
 	service.Stop()
+
 	fmt.Println(buf.String())
 }
 

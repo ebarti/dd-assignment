@@ -4,14 +4,16 @@ import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/goleak"
+	"log"
 	"testing"
 )
 
 func TestMetricAggregator(t *testing.T) {
 	defer goleak.VerifyNone(t)
-	var buf bytes.Buffer
+	buf := bytes.Buffer{}
+	logger := log.New(&buf, "", 0)
 	inputChan := make(chan []*MetricSample)
-	agg := NewMetricAggregator(&buf, 2)
+	agg := NewMetricAggregator(logger, 2)
 	agg.From(inputChan)
 
 	assert.NoError(t, agg.Start())

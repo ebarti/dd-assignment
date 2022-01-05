@@ -19,14 +19,14 @@ func GetCsvLogMonitorConfig(interval, threshold int64) *monitors.LogMonitorConfi
 		TimeWindow:     interval,
 		Filter:         "*",
 		AlertThreshold: threshold,
-		AlertTemplate:  "High traffic generated an alert - hits {{value}}, triggered at {{time}}\n",
+		AlertTemplate:  "High traffic generated an alert - hits {{value}}, triggered at {{time}}",
 		AlertTemplateContextFunc: func(m *metrics.ComputedMetric) map[string]string {
 			return map[string]string{
 				"value": strconv.FormatInt(m.Value, 10),
 				"time":  fmt.Sprintf("%v", time.Unix(m.Timestamp, 0)),
 			}
 		},
-		RecoveryTemplate:  "Recovered from high traffic at time {{time}}\n",
+		RecoveryTemplate:  "Recovered from high traffic at time {{time}}",
 		RecoveryThreshold: interval,
 		RecoveryTemplateContextFunc: func(m *metrics.ComputedMetric) map[string]string {
 			return map[string]string{

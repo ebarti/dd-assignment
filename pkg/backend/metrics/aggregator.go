@@ -3,7 +3,6 @@ package metrics
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"log"
 	"sync"
 	"sync/atomic"
@@ -11,7 +10,7 @@ import (
 )
 
 type MetricAggregator struct {
-	writer            io.Writer
+	logger            *log.Logger
 	InputChan         chan []*MetricSample // all metrics in the array will have the same timestamp as they come from the same log
 	interval          int64
 	firstSampled      int64
@@ -22,9 +21,9 @@ type MetricAggregator struct {
 	isDone            uint32
 }
 
-func NewMetricAggregator(writer io.Writer, interval int64) *MetricAggregator {
+func NewMetricAggregator(logger *log.Logger, interval int64) *MetricAggregator {
 	return &MetricAggregator{
-		writer:            writer,
+		logger:            logger,
 		InputChan:         make(chan []*MetricSample),
 		interval:          interval,
 		MetricsByInterval: make(map[int64]map[string]Metric),
@@ -111,10 +110,10 @@ func (s *MetricAggregator) flushStats(timestamp int64) {
 		computedMetrics = append(computedMetrics, computedMetric)
 	}
 	// flush stats to the writer
-	s.writer.Write(s.format(intervalStart, intervalEnd, timestamp, computedMetrics))
+	s.logger.Println(s.format(intervalStart, intervalEnd, timestamp, computedMetrics))
 }
 
-func (s *MetricAggregator) format(start, end, timestamp int64, computedMetrics []*ComputedMetric) []byte {
+func (s *MetricAggregator) format(start, end, timestamp int64, computedMetrics []*ComputedMetric) string {
 	var buf bytes.Buffer
 	flushTime := time.Unix(timestamp, 0)
 	startTime := time.Unix(start, 0)
@@ -126,8 +125,7 @@ func (s *MetricAggregator) format(start, end, timestamp int64, computedMetrics [
 		metric.Render(&buf)
 		buf.WriteRune('\n')
 	}
-	buf.WriteRune('\n')
-	return buf.Bytes()
+	return buf.String()
 }
 
 func (s *MetricAggregator) getBucket(timestamp int64) int64 {

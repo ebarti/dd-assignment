@@ -7,6 +7,7 @@ import (
 	"github.com/ebarti/dd-assignment/pkg/backend/metrics"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/goleak"
+	"log"
 	"strconv"
 	"strings"
 	"testing"
@@ -15,6 +16,7 @@ import (
 func TestLogMonitor(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	buf := bytes.Buffer{}
+	logger := log.New(&buf, "", 0)
 	inputChan := make(chan *logs.ProcessedLog)
 	expectedOutputLines := []string{
 		"High traffic generated an alert - hits 3, triggered at 101",
@@ -27,14 +29,14 @@ func TestLogMonitor(t *testing.T) {
 		TimeWindow:     2,
 		Filter:         "*",
 		AlertThreshold: 2,
-		AlertTemplate:  "High traffic generated an alert - hits {{value}}, triggered at {{time}}\n",
+		AlertTemplate:  "High traffic generated an alert - hits {{value}}, triggered at {{time}}",
 		AlertTemplateContextFunc: func(m *metrics.ComputedMetric) map[string]string {
 			return map[string]string{
 				"value": strconv.FormatInt(m.Value, 10),
 				"time":  strconv.FormatInt(m.Timestamp, 10),
 			}
 		},
-		RecoveryTemplate:  "Recovered from high traffic at time {{time}}\n",
+		RecoveryTemplate:  "Recovered from high traffic at time {{time}}",
 		RecoveryThreshold: 2,
 		RecoveryTemplateContextFunc: func(m *metrics.ComputedMetric) map[string]string {
 			return map[string]string{
@@ -43,7 +45,7 @@ func TestLogMonitor(t *testing.T) {
 		},
 	}
 
-	logMonitor := NewLogMonitor(logMonitorConfig, &buf)
+	logMonitor := NewLogMonitor(logMonitorConfig, logger)
 	logMonitor.InputChan = inputChan
 	assert.NoError(t, logMonitor.Start())
 	for _, log := range logsForMonitorTest {

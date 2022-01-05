@@ -4,7 +4,6 @@ import (
 	"github.com/ebarti/dd-assignment/pkg/backend/logs"
 	"github.com/ebarti/dd-assignment/pkg/backend/metrics"
 	"github.com/hoisie/mustache"
-	"io"
 	"log"
 	"sync/atomic"
 )
@@ -38,13 +37,13 @@ type LogMonitor struct {
 	metric                      *metrics.WindowCountMetric
 	IsInAlert                   bool
 	lastChecked                 int64
-	writer                      io.Writer
+	logger                      *log.Logger
 	InputChan                   chan *logs.ProcessedLog
 	done                        chan struct{}
 	isDone                      uint32
 }
 
-func NewLogMonitor(config *LogMonitorConfig, writer io.Writer) *LogMonitor {
+func NewLogMonitor(config *LogMonitorConfig, logger *log.Logger) *LogMonitor {
 	aTmpl, err := mustache.ParseString(config.AlertTemplate)
 	if err != nil {
 		// we should not panic here, but we will for this exercise
@@ -65,7 +64,7 @@ func NewLogMonitor(config *LogMonitorConfig, writer io.Writer) *LogMonitor {
 	}
 	return &LogMonitor{
 		name:                        config.Name,
-		writer:                      writer,
+		logger:                      logger,
 		alertThreshold:              config.AlertThreshold,
 		alertTemplate:               aTmpl,
 		alertTemplateContextFunc:    config.AlertTemplateContextFunc,
@@ -117,10 +116,10 @@ func (m *LogMonitor) monitor() {
 
 		if val > m.alertThreshold && !m.IsInAlert {
 			m.setInAlert()
-			m.writer.Write([]byte(m.alertTemplate.Render(m.alertTemplateContextFunc(computedMetric))))
+			m.logger.Println(m.alertTemplate.Render(m.alertTemplateContextFunc(computedMetric)))
 		} else if val <= m.recoveryThreshold && m.IsInAlert {
 			m.clearAlert()
-			m.writer.Write([]byte(m.recoveryTemplate.Render(m.recoveryTemplateContextFunc(computedMetric))))
+			m.logger.Println(m.recoveryTemplate.Render(m.recoveryTemplateContextFunc(computedMetric)))
 		}
 	}
 }
