@@ -11,7 +11,8 @@ func TestMetricAggregator(t *testing.T) {
 	defer goleak.VerifyNone(t)
 	var buf bytes.Buffer
 	inputChan := make(chan []*MetricSample)
-	agg := NewMetricAggregator(&buf, inputChan, 2)
+	agg := NewMetricAggregator(&buf, 2)
+	agg.From(inputChan)
 
 	assert.NoError(t, agg.Start())
 	for _, sample := range aMatrixOfTaggedMetricSamples {

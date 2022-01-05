@@ -17,16 +17,18 @@ type LogPipeline struct {
 }
 
 func NewLogPipeline(
-	inputChan chan *common.Message,
-	outputChan chan *logs.ProcessedLog,
 	logProcessorFunc LogProcessorFunc,
 ) *LogPipeline {
 
 	return &LogPipeline{
-		inputChan:        inputChan,
-		OutputChan:       outputChan,
+		inputChan:        make(chan *common.Message),
+		OutputChan:       make(chan *logs.ProcessedLog),
 		logProcessorFunc: logProcessorFunc,
 	}
+}
+
+func (i *LogPipeline) From(inputChan chan *common.Message) {
+	i.inputChan = inputChan
 }
 
 func (i *LogPipeline) AddMonitors(logMonitor []*monitors.LogMonitor) {

@@ -22,14 +22,18 @@ type MetricAggregator struct {
 	isDone            uint32
 }
 
-func NewMetricAggregator(writer io.Writer, inputChan chan []*MetricSample, interval int64) *MetricAggregator {
+func NewMetricAggregator(writer io.Writer, interval int64) *MetricAggregator {
 	return &MetricAggregator{
 		writer:            writer,
-		InputChan:         inputChan,
+		InputChan:         make(chan []*MetricSample),
 		interval:          interval,
 		MetricsByInterval: make(map[int64]map[string]Metric),
 		done:              make(chan struct{}),
 	}
+}
+
+func (s *MetricAggregator) From(inputChan chan []*MetricSample) {
+	s.InputChan = inputChan
 }
 
 func (s *MetricAggregator) Start() error {

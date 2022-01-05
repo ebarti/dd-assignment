@@ -13,7 +13,9 @@ func TestMetricsPipeline(t *testing.T) {
 	// create a custom metric pipeline to get an overall request count grouped by host
 	groupBy := []string{"host", "status"}
 	customMetricPipeline := NewCustomMetricPipeline("test", "*", 10, nil, groupBy)
-	metricsPipeline := NewMetricsPipeline(inputChan, outpuChan, []*CustomMetricPipeline{customMetricPipeline})
+	metricsPipeline := NewMetricsPipeline([]*CustomMetricPipeline{customMetricPipeline})
+	metricsPipeline.OutputChan = outpuChan
+	metricsPipeline.From(inputChan)
 
 	// start the pipeline
 	assert.NoError(t, metricsPipeline.Start())

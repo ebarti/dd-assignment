@@ -6,20 +6,22 @@ import (
 
 type MetricsPipeline struct {
 	inputChan     chan *logs.ProcessedLog
-	outputChan    chan []*MetricSample
+	OutputChan    chan []*MetricSample
 	customMetrics []*CustomMetricPipeline
 }
 
 func NewMetricsPipeline(
-	inputChan chan *logs.ProcessedLog,
-	outputChan chan []*MetricSample,
 	customMetrics []*CustomMetricPipeline,
 ) *MetricsPipeline {
 	return &MetricsPipeline{
-		inputChan:     inputChan,
-		outputChan:    outputChan,
+		inputChan:     make(chan *logs.ProcessedLog),
+		OutputChan:    make(chan []*MetricSample),
 		customMetrics: customMetrics,
 	}
+}
+
+func (m *MetricsPipeline) From(inputChan chan *logs.ProcessedLog) {
+	m.inputChan = inputChan
 }
 
 func (m *MetricsPipeline) Start() error {
@@ -37,9 +39,9 @@ func (m *MetricsPipeline) run() {
 		for _, metric := range m.customMetrics {
 			metrics = append(metrics, metric.Compute(input))
 		}
-		m.outputChan <- metrics
+		m.OutputChan <- metrics
 	}
-	close(m.outputChan)
+	close(m.OutputChan)
 }
 
 type CustomMetricPipeline struct {

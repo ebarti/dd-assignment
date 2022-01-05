@@ -37,7 +37,9 @@ func TestLogPipeline(t *testing.T) {
 	inputChan := make(chan *common.Message)
 	outputChan := make(chan *logs.ProcessedLog, len(msgs)+1)
 	monitorChan := make(chan *logs.ProcessedLog, len(msgs)+1)
-	logPipeline := NewLogPipeline(inputChan, outputChan, csvLogProcessor)
+	logPipeline := NewLogPipeline(csvLogProcessor)
+	logPipeline.OutputChan = outputChan
+	logPipeline.From(inputChan)
 	logPipeline.addMonitoredChannel(monitorChan)
 	assert.NoError(t, logPipeline.Start())
 	for _, msg := range msgs {
