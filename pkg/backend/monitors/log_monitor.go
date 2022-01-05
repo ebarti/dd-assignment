@@ -12,15 +12,15 @@ import (
 type ContextExtractorFunc func(*metrics.ComputedMetric) map[string]string
 
 type LogMonitorConfig struct {
-	name                        string
-	timeWindow                  int64
-	filter                      string
-	alertThreshold              int64
-	alertTemplate               string
-	alertTemplateContextFunc    ContextExtractorFunc
-	recoveryThreshold           int64
-	recoveryTemplate            string
-	recoveryTemplateContextFunc ContextExtractorFunc
+	Name                        string
+	TimeWindow                  int64
+	Filter                      string
+	AlertThreshold              int64
+	AlertTemplate               string
+	AlertTemplateContextFunc    ContextExtractorFunc
+	RecoveryThreshold           int64
+	RecoveryTemplate            string
+	RecoveryTemplateContextFunc ContextExtractorFunc
 }
 
 // only counter monitors are supported - in Datadog's terms, only .rollup("count") is supported
@@ -45,36 +45,36 @@ type LogMonitor struct {
 }
 
 func NewLogMonitor(config *LogMonitorConfig, writer io.Writer) *LogMonitor {
-	aTmpl, err := mustache.ParseString(config.alertTemplate)
+	aTmpl, err := mustache.ParseString(config.AlertTemplate)
 	if err != nil {
 		// we should not panic here, but we will for this exercise
 		log.Fatalf("Failed to parse alert template: %s", err)
 	}
-	recoveryTemplate := config.recoveryTemplate
-	if config.recoveryTemplate == "" {
-		recoveryTemplate = "[RECOVERED] " + config.alertTemplate
+	recoveryTemplate := config.RecoveryTemplate
+	if config.RecoveryTemplate == "" {
+		recoveryTemplate = "[RECOVERED] " + config.AlertTemplate
 	}
 	rTmpl, err := mustache.ParseString(recoveryTemplate)
 	if err != nil {
 		// we should not panic here, but we will for this exercise
 		log.Fatalf("Failed to parse recovery template: %s", err)
 	}
-	rFunc := config.recoveryTemplateContextFunc
+	rFunc := config.RecoveryTemplateContextFunc
 	if rFunc == nil {
-		rFunc = config.alertTemplateContextFunc
+		rFunc = config.AlertTemplateContextFunc
 	}
 	return &LogMonitor{
-		name:                        config.name,
+		name:                        config.Name,
 		writer:                      writer,
-		alertThreshold:              config.alertThreshold,
+		alertThreshold:              config.AlertThreshold,
 		alertTemplate:               aTmpl,
-		alertTemplateContextFunc:    config.alertTemplateContextFunc,
-		recoveryThreshold:           config.recoveryThreshold,
+		alertTemplateContextFunc:    config.AlertTemplateContextFunc,
+		recoveryThreshold:           config.RecoveryThreshold,
 		recoveryTemplate:            rTmpl,
 		recoveryTemplateContextFunc: rFunc,
-		customMetric:                metrics.NewCustomMetricPipeline(config.name, config.filter, config.timeWindow, nil, nil),
-		metric:                      metrics.NewWindowCountMetric(config.timeWindow),
-		timeWindow:                  config.timeWindow,
+		customMetric:                metrics.NewCustomMetricPipeline(config.Name, config.Filter, config.TimeWindow, nil, nil),
+		metric:                      metrics.NewWindowCountMetric(config.TimeWindow),
+		timeWindow:                  config.TimeWindow,
 		InputChan:                   make(chan *logs.ProcessedLog, 100),
 		done:                        make(chan struct{}),
 	}

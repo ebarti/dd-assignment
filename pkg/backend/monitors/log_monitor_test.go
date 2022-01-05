@@ -23,20 +23,20 @@ func TestLogMonitor(t *testing.T) {
 		"Recovered from high traffic at time 109",
 	}
 	logMonitorConfig := &LogMonitorConfig{
-		name:           "High traffic monitor",
-		timeWindow:     2,
-		filter:         "*",
-		alertThreshold: 2,
-		alertTemplate:  "High traffic generated an alert - hits {{value}}, triggered at {{time}}\n",
-		alertTemplateContextFunc: func(m *metrics.ComputedMetric) map[string]string {
+		Name:           "High traffic monitor",
+		TimeWindow:     2,
+		Filter:         "*",
+		AlertThreshold: 2,
+		AlertTemplate:  "High traffic generated an alert - hits {{value}}, triggered at {{time}}\n",
+		AlertTemplateContextFunc: func(m *metrics.ComputedMetric) map[string]string {
 			return map[string]string{
 				"value": strconv.FormatInt(m.Value, 10),
 				"time":  strconv.FormatInt(m.Timestamp, 10),
 			}
 		},
-		recoveryTemplate:  "Recovered from high traffic at time {{time}}\n",
-		recoveryThreshold: 2,
-		recoveryTemplateContextFunc: func(m *metrics.ComputedMetric) map[string]string {
+		RecoveryTemplate:  "Recovered from high traffic at time {{time}}\n",
+		RecoveryThreshold: 2,
+		RecoveryTemplateContextFunc: func(m *metrics.ComputedMetric) map[string]string {
 			return map[string]string{
 				"time": strconv.FormatInt(m.Timestamp, 10),
 			}
