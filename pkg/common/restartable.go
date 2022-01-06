@@ -4,4 +4,5 @@ package common
 type Restartable interface {
 	Start() error
 	Stop()
+	IsStopped() bool
 }

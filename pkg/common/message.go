@@ -7,3 +7,7 @@ type Message struct {
 	Origin             string
 	IngestionTimestamp int64
 }
+
+func NewMessage(content []byte, origin string, ingestionTimestamp int64) *Message {
+	return &Message{Content: content, Origin: origin, IngestionTimestamp: ingestionTimestamp}
+}
