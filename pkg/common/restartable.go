@@ -1,6 +1,6 @@
 package common
 
-// Restartable defines a service
+// Restartable defines a component that can be started and stopped
 type Restartable interface {
 	Start() error
 	Stop()
