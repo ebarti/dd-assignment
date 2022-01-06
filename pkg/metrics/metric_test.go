@@ -219,7 +219,8 @@ func TestComputedMetric_Equals(t *testing.T) {
 func TestComputedMetric_Render(t *testing.T) {
 	var buf bytes.Buffer
 	computedMetricSample.Render(&buf)
-	expected := "Metric test count: 12\n\tWith tag name host: 12\n\t\tWith tag name host1: 6\n\t\tWith tag name host2: 4\n\t\tWith tag name host3: 2\n\tWith tag name http.path.section: 8\n\t\tWith tag name section1: 5\n\t\tWith tag name section2: 3"
+	expected := "Metric test count: 12\n\tWith tag name host: 12\n\t\thost1: 6\n\t\thost2: 4\n\t\thost3: 2\n\tWith tag name http.path.section: 8\n\t\tsection1: 5\n\t\tsection2: 3"
 	assert.Equal(t, len([]byte(expected)), len(buf.Bytes()))
+	fmt.Println(buf.String())
 	assert.Equal(t, expected, buf.String())
 }

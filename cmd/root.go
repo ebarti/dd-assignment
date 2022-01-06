@@ -56,8 +56,8 @@ func init() {
 	rootCmd.Flags().StringVarP(&filePath, FileFlag, "f", "", "Path to the CSV file to process")
 	rootCmd.MarkFlagRequired(FileFlag)
 	rootCmd.Flags().Int64VarP(&statPrintInterval, StatPrintIntervalFlag, "i", 10, "Interval at which to output statistics in seconds")
-	rootCmd.Flags().Int64VarP(&alertThreshold, AlertThresholdFlag, "a", 10, "Number of requests per second that, once aggregated over the time window, will trigger an alert")
-	rootCmd.Flags().Int64VarP(&alertTimeWindow, AlertTimeWindow, "t", 2*60, "Time window in seconds to aggregate requests over")
+	rootCmd.Flags().Int64VarP(&alertThreshold, AlertThresholdFlag, "t", 10, "Number of requests per second that, once aggregated over the time window, will trigger an alert")
+	rootCmd.Flags().Int64VarP(&alertTimeWindow, AlertTimeWindow, "w", 2*60, "Time window in seconds to aggregate requests over")
 }
 
 func runRootCmd(cmd *cobra.Command, args []string) error {

@@ -57,7 +57,7 @@ func (c *ComputedMetric) Render(buf *bytes.Buffer) {
 	for _, group := range c.Groups {
 		fmt.Fprintf(buf, "\n\tWith tag name %s: %d", group.Name, group.Value)
 		for _, subGroup := range group.Groups {
-			fmt.Fprintf(buf, "\n\t\tWith tag name %s: %d", subGroup.Name, subGroup.Value)
+			fmt.Fprintf(buf, "\n\t\t%s: %d", subGroup.Name, subGroup.Value)
 		}
 	}
 }
